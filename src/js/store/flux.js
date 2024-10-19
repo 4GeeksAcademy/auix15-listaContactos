@@ -1,43 +1,45 @@
-const getState = ({ getStore, getActions, setStore }) => {
+
+
+
+const getState = ({ getStore, setStore }) => {
 	return {
 		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			
+			contacts: []
 		},
 		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
+			 // Acción para obtener la lista de contactos desde la API
+			 getContacts: async () => {
+                const response = await fetch(`https://playground.4geeks.com/contact/agendas/auix15`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+            }),
+            if (!response.ok) {
+                throw new Error(`Error al obtener los contactos: ${response.status} ${response.statusText}`);
+            }
+            const data = await response.json();
+            setStore({ contacts: data }); 
+        };
+            // Acción para eliminar un contacto
+            deleteContact: async (index) => {
+                const store = getStore();
+                const contactId = store.contacts[index].id;
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
-
-				//reset the global store
-				setStore({ demo: demo });
-			}
+                try {
+                    const response = await fetch(`https://playground.4geeks.com/contact/agendas/auix15/${contactId}`, {
+                        method: "DELETE"
+                    });
+                    if (response.ok) {
+                        const newContacts = store.contacts.filter((_, i) => i !== index);
+                        setStore({ contacts: newContacts });
+                    } else {
+                        console.error("Error al eliminar el contacto:", response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Error en la eliminación del contacto:", error);
+                }
+            }
 		}
 	};
 };
